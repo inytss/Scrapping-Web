@@ -1,0 +1,1 @@
+"0","abline(h= mean(telco$TotalCharges), col = ""red"", lwd = 4, lty =2)"

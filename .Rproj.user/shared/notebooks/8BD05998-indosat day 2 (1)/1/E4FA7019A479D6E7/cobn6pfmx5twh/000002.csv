@@ -1,0 +1,6 @@
+"0","ggplot(data = wiki,aes(x = month, fill = year)) + "
+"0","  geom_bar(position = ""fill"") +"
+"0","  geom_text(aes(label = ..count..),"
+"0","            stat = ""count"","
+"0","            position = position_fill(vjust=0.5))"
+"0",""

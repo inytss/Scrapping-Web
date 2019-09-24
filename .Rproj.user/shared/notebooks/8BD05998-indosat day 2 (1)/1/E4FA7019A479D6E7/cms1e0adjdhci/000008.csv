@@ -1,0 +1,1 @@
+"0","legend(""topleft"", legend = levels(telco$PaymentMethod), fill = 1:4)"

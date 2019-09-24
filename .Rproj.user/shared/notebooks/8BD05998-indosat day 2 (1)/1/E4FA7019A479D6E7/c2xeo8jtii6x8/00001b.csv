@@ -1,0 +1,4 @@
+"0","ggplot(aes(telco$Churn), telco)
+"
+"2","Error: Mapping should be created with `aes() or `aes_()`.
+"

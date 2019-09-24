@@ -1,0 +1,18 @@
+"0","library(reshape2)"
+"2","
+Attaching package: ‘reshape2’
+
+"
+"2","The following object is masked from ‘package:tidyr’:
+
+    smiths
+
+"
+"0","ggplot(data = wiki, aes(x = day,y = views)) +"
+"0","  geom_col(aes(fill=day))+   scale_fill_brewer(palette=""Dark2"")+"
+"0","  facet_wrap(~language) + "
+"0","  theme_classic() + "
+"0","  theme(strip.background = element_rect(colour = ""black"", fill = ""khaki1""),"
+"0","        legend.position = ""top"") + "
+"0","          theme_indosat "
+"0",""

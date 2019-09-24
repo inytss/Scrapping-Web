@@ -1,0 +1,6 @@
+"0",""
+"0","ggplot(data = telco, aes(x = InternetService, fill = PaymentMethod)) + "
+"0","  geom_bar( position = 'stack') +"
+"0","  theme_classic() +"
+"0","  scale_y_continuous(labels = comma)"
+"0",""

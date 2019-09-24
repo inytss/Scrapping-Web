@@ -1,0 +1,12 @@
+"0","#wiki$date <- as.Date(wiki$date, format = ""%Y-%m-%d"")
+library(lubridate)
+"
+"2","
+Attaching package: ‘lubridate’
+
+"
+"2","The following object is masked from ‘package:base’:
+
+    date
+
+"

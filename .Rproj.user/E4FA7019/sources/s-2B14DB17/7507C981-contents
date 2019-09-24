@@ -1,0 +1,423 @@
+---
+title: "Indosat day 1"
+author: "Ajeng Prastiwi"
+date: "March 11, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+wiki <- read.csv("C:/Users/Algoritma/Downloads/indosat_wiki.csv")
+head(wiki$date)
+```
+
+```{r}
+# wiki$date <- as.Date(wiki$date, format = "%Y-%m-%d")
+library(lubridate)
+wiki$date <- ymd(wiki$date)
+wiki$date <- ymd(wiki$date)
+
+format(dmy("11-03-2019"), format = "%A, %B-%d-%Y")
+
+
+tes <- c("12-24-2019","23-09-2019","20-12-2019","09-09-19")
+
+parse_date_time(tes, c("%m-%d-%Y","%d-%m-%Y","%d-%m-%y"))
+
+tail(wiki$date)
+
+```
+
+```{r}
+wiki$year <- year(wiki$date)
+wiki$month <- months(wiki$date, abbreviate = T)
+wiki$day <- weekdays(wiki$date)
+
+```
+
+```{r}
+wiki$year <- as.factor(wiki$year)
+
+wiki[,c("year","month","day")] <- lapply(wiki[,c("year", "month","day")], as.factor)
+
+range(wiki$date)
+levels(wiki$month)
+levels(wiki$day)
+
+wiki$month <- ordered(wiki$month, levels = c("Jan", "Feb", "Mar", "Apr","May","Jun","Jul","Aug", "Sep", "Oct", "Nov", "Dec"))
+
+wiki$day <- ordered(wiki$day, levels = c("Monday", "Tuesday", "Wednesday","Thursday","Friday","Saturday","Sunday"))
+
+wiki$month <- ordered(wiki$month, levels = month.abb)
+levels(wiki$month)
+levels(wiki$day)
+```
+
+```{r}
+#mencari nilai views terbesar
+wiki[wiki$views == max(wiki$views),]
+wiki[wiki$views == max(wiki$views),]
+wiki[max(wiki$views),]
+
+
+colSums(is.na(wiki))
+
+# write.csv(wiki, "C:/Users/Algoritma/Algoritma Data Science/Bismillah/Shiny App/data_input/wiki.csv")
+```
+```{r}
+# filter data access = mobile-web & language "id"  
+wiki.agg <- wiki[wiki$access == "mobile-web" & wiki$language == "id",]
+
+# boxplot
+# scatter plot
+# histogram
+
+```
+
+```{r}
+#Boxplot
+plot(wiki.agg$year, wiki.agg$views,
+     main = "Boxplot Tahun 2015-2018",
+     sub = "Source: Wikipedia",
+     xlab = "Year",
+     ylab = "Total Views",
+     col.main = "#f9e307")
+abline(h = c(200,300), col = "red")
+abline(v = 200, col = "red")
+```
+```{r}
+ggplot(aes(wiki.agg$year, wiki.agg$views), data = wiki.agg)+
+  geom_boxplot() +
+  geom_hline(yintercept = 200)
+```
+
+```{r}
+wiki.agg[wiki.agg$views > 200,]
+```
+
+```{r}
+telco <- read.csv(file = "C:/Users/Algoritma/Downloads/TelcoChurn.csv")
+summary(telco$SeniorCitizen)
+#telco$SeniorCitizen <- as.factor(telco$SeniorCitizen)
+telco$SeniorCitizen <- sapply(as.character(telco$SeniorCitizen), switch,
+                              "0"= "No",
+                              "1" = "Yes")
+telco$SeniorCitizen <- as.factor(telco$SeniorCitizen)
+levels(telco$SeniorCitizen)
+head(telco$SeniorCitizen)
+```
+```{r}
+# check missing value
+colSums(is.na(telco))
+mean(telco$TotalCharges, na.rm = T)
+telco <- telco[complete.cases(telco),]
+
+# [ row, column]
+telco[1:5,1:5]
+```
+
+```{r}
+head(telco)
+```
+
+```{r}
+telco$customerID <- as.character(telco$customerID)
+```
+
+```{r}
+nrow(telco)
+table(telco$Churn)
+# Bar plot
+plot(telco$Churn, 
+     col = c("green","red"), 
+     main = "Churn vs Not Churn",
+     sub = "Source: Kaggle",
+     ylab = "Frequency")
+legend("topright", legend = levels(telco$Churn), fill = c("green","red"))
+```
+
+```{r}
+#Scatterplot
+# x dan y numerik
+plot(telco$MonthlyCharges, telco$TotalCharges, col = telco$PaymentMethod)
+abline(h= mean(telco$TotalCharges), col = "red", lwd = 4, lty =2)
+abline(v = mean(telco$MonthlyCharges), col = "yellow", lwd = 4, lty=3)
+legend("topleft", legend = levels(telco$PaymentMethod), fill = 1:4)
+```
+
+```{r}
+range(telco$MonthlyCharges)
+hist(telco$MonthlyCharges, breaks = 6)
+```
+
+# Day 2
+
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+
+data("quakes")
+head(quakes)
+x <- c(1,2,3,4,5)
+y <- c(5,4,3,2,1)
+plot(x,y)
+plot(quakes$mag, quakes$stations, xlab = "Mag", ylab = "Stations", type="b")
+```
+
+```{r}
+wiki
+library(ggplot2)
+ggplot(data = quakes, aes(x = mag, y = stations)) + geom_point()
+plot1 <- ggplot(data = quakes, aes(x = mag,y = stations))
+plot1 + geom_point()
+```
+
+
+language views
+id        50
+en        100
+id        20
+en        70
+
+id   en   
+50  100
+20  70
+
+
+```{r}
+#install.packages("tidyr")
+library(tidyr)
+wiki.s <- spread(data = wiki,key = language, value = views)
+summary(wiki.s$en)
+colSums(is.na(wiki.s))
+```
+```{r}
+ggplot(data = wiki.s,aes(x = id, y = en)) +
+  geom_point(aes(col = access, shape = access)) +
+  labs(title = "Total Views Article Indosat",
+       subtitle = " Access by desktop and Mobile Web",
+       caption = "Source: Google",
+       x = " Indonesian Article",
+       y = "English Article"
+        ) + theme_minimal()
+```
+```{r}
+ggplot(data = wiki.s, aes(x = year,y = id)) + 
+  geom_jitter(aes(col= access, shape = access), alpha =0.5) +
+  geom_boxplot()
+
+ggplot(data = wiki.s, aes(x = year,y = id)) + 
+  geom_boxplot()+
+  geom_jitter(aes(col= access, shape = access), alpha =0.5) 
+  
+```
+
+```{r}
+wiki.s$wday <- as.factor(ifelse(wiki.s$day == "Saturday" | wiki.s$day == "Sunday", "Weekend", "Weekdays"))
+```
+
+```{r}
+ggplot(data = wiki.s, aes(x = wday, y= id)) + 
+  geom_col(aes(fill=wday))
+
+wiki.agg.s <- aggregate(id~wday, data = wiki.s, sum)
+
+
+```
+
+```{r}
+library(scales)
+ggplot(data = wiki.agg.s, aes(x= wday, y= id)) +
+  geom_col(aes(fill= wday))+ 
+  geom_label(aes(label = comma(id))) + 
+  scale_y_continuous( labels = comma) +
+  labs(title = " Total Views  of Article",
+       subtitle = " by English and Indonesian Article",
+       caption = "Source : Wikipedia",
+       x = "Wday",
+       y = "Views")
+```
+```{r}
+
+# geom_bar, geom_column fill
+#geom_point, geom_jitter col
+
+ggplot(data = telco, aes(x = InternetService, fill = PaymentMethod)) + 
+  geom_bar( position = 'dodge')
+
+ggplot(data = telco, aes(x = InternetService, fill = PaymentMethod)) + 
+  geom_bar( position = 'fill') 
+
+ggplot(data = telco, aes(x = InternetService, fill = PaymentMethod)) + 
+  geom_bar( position = 'stack') +
+  theme_classic() +
+  scale_y_continuous(labels = comma)
+
+```
+
+Exercise
+```{r}
+ggplot(data = wiki,aes(x = month)) + 
+  geom_bar(aes(fill = year)) +
+  labs (title = " Total Views Wikipedia Indosat",
+        subtitle = " Group by July 2015 - December 2018",
+        caption = "Source: Kaggle",
+        x = "Month",
+        y = "Frequency")
+
+
+ggplot(wiki, aes(x = month, y = views)) + 
+  geom_col(aes(fill = year)) + 
+  scale_y_continuous(labels = comma)+
+  theme(legend.background = element_blank(colour = "blue", fill = "blue"),
+        legend.key = element_blank())
+```
+
+
+
+Day 3
+
+```{r}
+theme_indosat <-  theme(legend.background = element_rect(fill="khaki3", colour=NA),
+        legend.key  = element_rect(fill="transparent", colour=NA),
+        plot.background = element_rect(fill="khaki1", colour='khaki4', linetype = 1),
+        axis.line = element_line(colour = "grey20"),
+        axis.text.x = element_text(colour = "grey20", size = 8, angle = 60, hjust = 0.8, vjust = 0.7),
+        axis.text.y = element_text(colour = "grey20", size = 12),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5, size = 8),
+        panel.border = element_rect(fill=NA),
+        panel.background  = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) 
+```
+
+```{r}
+telco.gather <- gather(telco, total_type, total, TotalCharges, MonthlyCharges)
+ggplot(data = telco.gather, aes(x = PaymentMethod,y = total)) +
+  geom_col(aes(fill=total_type)) +
+  scale_y_continuous(labels = comma)
+```
+
+
+```{r}
+ggplot(data = wiki,aes(x = month, fill = year)) + 
+  geom_bar(position = "fill") +
+  geom_text(aes(label = ..count..),
+            stat = "count",
+            position = position_fill(vjust=0.5))
+
+```
+
+```{r}
+ggplot(data = wiki,aes(x = month)) + 
+  geom_bar(aes(fill = year)) +
+  labs (title = " Total Views Wikipedia Indosat",
+        subtitle = " Group by July 2015 - December 2018",
+        caption = "Source: Kaggle",
+        x = "Month",
+        y = "Frequency") +  
+  scale_fill_brewer(palette="Spectral") +
+  theme(legend.background = element_rect(fill="khaki3", colour=NA),
+        legend.key  = element_rect(fill="transparent", colour=NA),
+        plot.background = element_rect(fill="khaki1", colour='khaki4', linetype = 1),
+        axis.line = element_line(colour = "grey20"),
+        axis.text.x = element_text(colour = "grey20", size = 8, hjust = 0.8, vjust = 0.7),
+        axis.text.y = element_text(colour = "grey20", size = 12),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5, size = 8),
+        panel.border = element_rect(fill=NA),
+        panel.background  = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) 
+
+
+```
+
+
+```{r}
+library(reshape2)
+ggplot(data = wiki, aes(x = day,y = views)) +
+  geom_col(aes(fill=day))+   scale_fill_brewer(palette="Dark2")+
+  facet_wrap(~language) + 
+  theme_classic() + 
+  theme(strip.background = element_rect(colour = "black", fill = "khaki1"),
+        legend.position = "top") + 
+          theme_indosat 
+
+```
+
+```{r}
+ggplot(data = wiki, aes(x = day,y = views)) +
+  geom_col(aes(fill=year))+
+  facet_grid(year~language)
+```
+
+
+```{r}
+#Exercise
+ggplot(wiki, aes(x=day, y =views)) +
+  geom_col(aes(fill = day)) +
+  facet_grid(language~access) + 
+  theme(strip.background = element_rect(color = "black", fill = "khaki"),
+        panel.background = element_blank(),
+        panel.border = element_rect(fill = NA)) +
+   scale_fill_brewer(palette="Dark2")
+```
+
+
+
+
+```{r}
+wiki$month <- as.factor(months(wiki$date, abbreviate = F))
+ggplot(wiki, aes(x = month, y = views)) + 
+  geom_col(aes(fill = year)) + 
+  scale_y_continuous(labels = comma) +
+  labs (title = " Total Views Wikipedia Indosat",
+        subtitle = " Group by July 2015 - December 2018",
+        caption = "Source: Kaggle",
+        x = "Month",
+        y = "Total Views") + theme(legend.key = element_rect(fill="black"),
+           text = element_text(color="white"),
+           legend.background = element_rect(color="white", fill="#1e1e1e"),
+           plot.title = element_text(size=8),
+           plot.subtitle = element_text(size=6),
+           panel.background = element_rect(fill="#dddddd"),
+           panel.border = element_rect(fill="NA"),
+           panel.grid.minor.x = element_blank(),
+           panel.grid.major.x = element_blank(),
+           panel.grid.major.y = element_line(color="darkgrey", linetype=2),
+           panel.grid.minor.y = element_blank(),
+           plot.background = element_rect(fill="#006341"),
+           axis.text = element_text(color="white"),
+           axis.title =  element_text(color="white", size=6.5)
+           )
+
+```
+
+
+optional:
+
+```{r}
+# library(devtools)
+# install_github("larmarange/JLutils")
+# library(JLutils)
+```
+
+```{r}
+library(JLutils)
+ggplot(data = wiki,aes(x = month, fill = year)) + 
+  geom_bar(position = "fill") +
+  labs (title = " Total Views Wikipedia Indosat",
+        subtitle = " Group by July 2015 - December 2018",
+        caption = "Source: Kaggle",
+        x = "Month",
+        y = "Frequency")+ geom_text(stat = "fill_labels")
+
+```
+
+
+

@@ -1,0 +1,3 @@
+"0","ggplot(data = wiki, aes(x = day,y = views)) +"
+"0","  geom_col(aes(fill=year))+"
+"0","  facet_grid(year~language)"
