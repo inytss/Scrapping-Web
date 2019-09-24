@@ -1,0 +1,364 @@
+---
+title: 'Web Scraping in R : rvest'
+author: "Inayatus"
+date: "`r format(Sys.Date(), '%A, %B %d, %Y')`"
+output:
+  rmdformats::readthedown: 
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: monochrome
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(plotly)
+library(ggthemes)
+```
+
+Downloading data in many data provider website maybe commen we've done before. How if we want to scrap or crawling a data, but the data we want get is from those website? In here, we want to do data scraping or data crawling. In this step we want to try to crawl data from [trustpilot website](https://www.trustpilot.com/).   
+
+Trustpilot is an popular website that used by customer to put the review in one of any famous e-commerce website. The review is about bussiness and service of the e-commerce website to serve their customer. In this tutorial, we want to discuss howw to scrap or crawl useful information from Trustpillot website then make a simple insight from the data or information. In this tutorial we want to use `rvest` package that built in R. 
+
+# Library Used
+
+Before we can do crawling data from website, we need *package* is installed in our machine. This is *package* that we need to install in order to do crawling data.
+
+```{r, message=FALSE, warning=FALSE}
+# general purpose data wraling
+library(tidyverse)
+
+# parsing of HTML/XML files
+library(rvest)
+
+# string manipulation
+library(stringr)
+
+# Date time manipulation
+library(lubridate)
+
+# verbose regular expression
+library(rebus)
+```
+
+# Find All Page
+
+After that, say taht we want to pull information from e-commerce website like **Amazon**. What we need to pull information from website is using their URL from those website.
+
+URL that we use, we want to save it into object.
+
+```{r}
+url <- 'https://www.trustpilot.com/review/www.amazon.com?page=225'
+```
+
+Usually in large companies, especially if it is e-commerce, of course, has very many reviews, can be more than hundreds.
+
+To get data from a website we need to use the functionality of the `rvest` package. To convert a website into an XML object, we use the `read_html ()` function. But don't forget to provide the target URL that we will use to collect data, call the web server, and parse data from the web. To extract the node from the XML object we use `html_nodes ()`, and it is followed by `.` to indicate the _class_ descriptor. The output that will be generated is a list of all the nodes found. To extract _tagged data_, we use `html_text ()` on the node that we have found. In the case when we need to extract an attribute on the website, we use `html_attrs ()`. This function can return the attributes that we want to reset and extract.
+
+Well, it's not difficult for long, let's try it together.
+
+In this tutorial, we will play around a lot using `fuction ()` whose purpose is to extract the data that we will take from a website. In the `function` that we will create later, we need to know _ tag_ of the information that we will take.
+
+Because this time I want to exemplify scrapping data from Amazon e-commerce, here is the tag that we need.
+
+  - `.pagination-page`: _tag_ to see how many pages or page reviews
+  - `. consumer-information__ names»: _tag_ to find out the name of the reviewer
+  - `.star-rating`: _tag_ to find out the rating rating of an e-commerce
+  - `.review-content__text`: _tag_ to find out the review given by each reviewer
+  - `. consumer-information__location`: _tag_ to find out where the reviewer is from
+  - `. consumer-information__ review-count`: _tag_ to find out how many reviewers have reviewed it
+
+> Keep in mind that for each website it has a different _tag_ and _class_ names, so it must be adjusted for a particular website
+
+Here is a `function 'that can be used for some _tag_ above.
+
+```{r}
+last.page <- function(html){
+  pages.data <- html %>% 
+    html_nodes('.pagination-page') %>%
+    # ekstrak raw teks ke list
+    html_text()
+  # mengambil halaman kedua hingga terakhir
+  pages.data[(length(pages.data))] %>%
+    # mengambil raw string
+    unname() %>% 
+    # convert ke angka
+    as.numeric()
+}
+
+```
+
+The steps above apply the `html_nodes ()` function where we want to extract the `pagination` class. The last function created is a function to take the correct item from the list, the second page until the end, and convert it to a numeric value.
+
+To test the function we can use the `read_html ()` function and apply it to the function we have written:
+
+```{r}
+first.page <- read_html(url)
+latest.page <- last.page(first.page)
+```
+
+Now we got the numbers, we want to generalize the list from all of URL.
+
+```{r}
+list.of.pages <- str_c(url, '?page=', 1:latest.page)
+head(list.of.pages)
+```
+
+We can checked it manually from `list.of.page`.
+
+
+# Extract Information of One Page
+
+If we want to extract the review text, rating, author name, and time from collecting the review from the subpage. We can repeat the steps from the beginning of each *fields* that we want to find.
+
+```{r}
+information <- function(html, tag){
+  html %>% 
+    # relevant tag
+    html_nodes(tag) %>% 
+    html_text() %>% 
+    # trim additional white space
+    str_trim() %>% 
+    # mengubah dari list ke vector
+    unlist()
+}
+```
+
+Last but not least, we want to make a function to extract rating review. Rating called an atribute in tag. Rating is not a numeric, but include in `star-rating-X`, whereas X is number that we want.
+
+Last step, we applu thos function is URL list that we want to generalized. To use that, we use `map()` from `purrr` package that include in big package `tidyverse`.
+
+```{r}
+star.rating.information <- function(html){
+  # pattern you look for : the first digit after 'star-rating-'
+  pattern = 'star-rating-' %R% capture(DIGIT)
+  
+  rating <- html %>% 
+    html_nodes('.star-rating') %>% 
+    html_attrs() %>% 
+    # apply the pattern match to all attribtes
+    map(str_match, pattern = pattern) %>% 
+    # str_match[1] is fully matched string, the second entry
+    # is the part you extract with the capture in your pattern
+    map(2) %>% 
+    unlist()
+  
+  # leave out first instance, as it is not part of a review
+  rating[3:length(rating)]
+}
+```
+
+Then we want to get date and time of reviewer.
+
+```{r}
+dates <- function(html){
+  read_html(url) %>%
+    html_nodes('.review-card .review__content .review-content .review-content__header  .review-content-header .review-content-header__dates') %>%
+    html_text() %>%
+    purrr::map(1) %>%
+    # parse string into a datetime object with lubridate
+    ymd_hms() %>%
+    unlist()
+}
+```
+
+Then we want to bind it to be one table.
+
+```{r}
+get.data.table <- function(html, company.name){
+  # extract basic information from HTML
+  name.review <- information(html, '.consumer-information__name')
+  text.review <- information(html, '.review-content__text')
+  location.review <- information(html, '.consumer-information__location')
+  review.count <- information(html, '.consumer-information__review-count')
+  rating <- star.rating.information(html)
+  dates <- dates(html)
+  
+  #combine into tibble
+  combine.data <- tibble(Name = name.review, Dates = dates, Review = text.review, Location = location.review, 
+                         Review.count = review.count, Rating = rating)
+  
+  # tag individual data with the company name
+  combine.data %>% 
+    mutate(company = company.name) %>% 
+    select(company, Name, Dates, Review, Location, Review.count, Rating)
+}
+```
+
+```{r}
+get.data.url <- function(url, company.name){
+  html <- read_html(url)
+  get.data.table(html, company.name)
+}
+```
+
+And then we want to make a function to do scrap of data that we want to pull from URL we choose. We will bind it into *tibble*.
+ 
+```{r}
+scrape.table <- function(url, company.name){
+  # baca halaman pertama
+  first.page <- read_html(url)
+  # ekstrak nomor halaman 
+  latest.page <- last.page(first.page)
+  # masukin target URL
+  list.of.pages <- str_c(url, '?page=', 1:latest.page)
+  
+  # apply the extraction and bind the individuals resuts back into one table
+  list.of.pages %>% 
+    purrr::map(get.data.url, company.name) %>% 
+    # combine the tibbles into one tibble
+    bind_rows() %>% 
+    # write a tab-eparated file
+    write_tsv(str_c(company.name, '.tsv'))
+}
+
+```
+
+Let's try to scrap Amazon review from Trustpilot website.
+
+```{r eval = FALSE}
+temp <- scrape.table(url, 'amazon')
+```
+
+
+```{r}
+# menyimpan data hasil scraping
+amazon <- read_tsv('amazon.tsv')
+head(amazon, 10)
+```
+# Visualisation Data {.tabset .tabset-fade .tabset-pills}
+
+We have obtained some review data from several people. Based on the results of scraping obtained, there are 4500 reviewers who gave reviews on Amazon's website. Of the 4500 reviewers who gave a review, the number of ratings given based on the many stars is as follows.
+
+## Total Rating
+
+```{r, echo=FALSE, fig.width=8, warning=FALSE, message=FALSE}
+# library(extrafont)
+# font_import()
+# loadfonts(device = "win")
+amazon.new <- amazon %>% 
+  mutate(Date = as.Date(Dates),
+         Time = format(Dates, "%h:%m:%s"),
+         rating = factor(Rating, levels = c(1:5), 
+                         labels = c("Star 1", "Star 2", "Star 3", "Star 4", "Star 5")),
+         Judgement = as.factor(case_when(rating == "Star 1"~"Worse",
+                                      rating == "Star 2"~"Bad",
+                                      rating == "Star 3"~"Good",
+                                      rating == "Star 4"~"Better",
+                                      rating == "Star 5"~"Best",
+                                      TRUE ~ as.character(Rating))))
+  
+amazon.new %>% 
+  arrange(rating, Judgement) %>% 
+  group_by(rating, Judgement) %>% 
+  summarise(freq = n()) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = rating, y = freq)) +
+  geom_col(aes(fill = rating)) + 
+  geom_label(aes(label = factor(freq)), colour = "black", size = 3, nudge_y = 70, label.size = 0.15) +
+  geom_text(aes(label = Judgement), position = position_stack(vjust = 0.5), angle = 90, size = 2.5, 
+            color = c("black", "black", "black", "white", "white"), fontface = "bold") +
+  labs(x = "Rating", y = "Amount of Rating", title = "Total Rating") +
+  scale_fill_manual(values = c("#fadbe0", "#eaadbd", "#b88a9f", "#876880", "#554562")) +
+  theme(title = element_text(size = 12, colour = "black", 
+                             family = "Franklin Gothic Medium"),
+        plot.title = element_text(hjust = 0.5),
+        axis.title = element_text(size = 10, color = "black", family = "Calibri"),
+        legend.title = element_text(size = 8, hjust = 0.2, vjust = 0.2, angle = 0.5, family = "Calibri"),
+        legend.text = element_text(size = 8, hjust = 0.2, vjust = 0.2, angle = 0.5, family = "Calibri"),
+        legend.box.background = element_blank(),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        axis.line = element_line(colour = "grey", size = 0.8),
+        panel.grid.major.y = element_line(colour = "white", linetype = 1),
+        panel.background = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        plot.margin = margin(1, 1, 1, 1, "cm"),
+        plot.background = element_rect(colour = "grey", fill = "grey90", size = 1),
+        legend.position = "bottom")
+```
+
+From the graph above, we get information that many reviewers give a 5 (Star 5) rating to Amazon. If we look at the movements of the average rating each month and weekly on Amazon are as follows.
+
+## Montly Average Rating
+
+```{r}
+library(xts)
+
+amazon.ts <- xts(amazon.new$Rating, amazon.new$Date)
+colnames(amazon.ts) <- 'Rating'
+ended.interval <- '2009-01-01/'
+amazon.xts <- amazon.ts[ended.interval]
+avg.rating <- apply.monthly(amazon.xts, colMeans)
+count.rating <- apply.monthly(amazon.xts, FUN = length)
+
+```
+
+
+```{r}
+avg.rating <- avg.rating %>% 
+  as.data.frame() 
+avg.rating$month <- row.names(avg.rating)
+# avg.rating <- avg.rating[,c(ncol(avg.rating), 1:(ncol(avg.rating)-1))]
+avg.rating <- avg.rating %>% 
+  mutate(month = as.Date(month),
+         Year = year(month),
+         Month_ = month(month),
+         Month = factor(paste( Year, Month_, sep = "-")),
+         Month = factor(Month, levels = Month)) %>% 
+  select(-Year, -Month_, -month) 
+
+count.rating <- count.rating %>% 
+  as.data.frame() 
+count.rating$month <- row.names(count.rating)
+# avg.rating <- avg.rating[,c(ncol(avg.rating), 1:(ncol(avg.rating)-1))]
+count.rating <- count.rating %>% 
+  mutate(month = as.Date(month),
+         Year = year(month),
+         Month_ = month(month),
+         Month = factor(paste( Year, Month_, sep = "-")),
+         Month = factor(Month, levels = Month)) %>% 
+  select(-Year, -Month_, -month)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+avg.plot <- avg.rating %>% 
+  ggplot(aes(x= Month, y = Rating, group = 1)) +
+  geom_line(lwd = 1.5, colour = "#E93434") +
+  scale_y_continuous(limits = c(1.0, 5.5), breaks = seq(1.0, 10.0, 1.1), 
+                     name = "Average Rating/month") +
+  labs(title = "Average Month Rating", x = "Month") +
+  theme(title = element_text(family = "Lucida Sans Unicode", size = 12, face = "bold"),
+        plot.title = element_text(hjust = 0.5),
+        axis.title = element_text(size = 10, vjust = 0.5),
+        axis.line = element_line(colour = "grey70", size = 0.8),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(colour = "grey70", linetype = 1),
+        panel.grid.minor.y = element_blank(),
+        plot.margin = margin(.5, .5, .5, .5, "cm"),
+        plot.background = element_rect(colour = "grey", fill = "#E1E1E1", size = 0.8))
+
+count.plot <- count.rating %>% 
+  ggplot(aes(x= Month, y = Rating, group = 1)) +
+  geom_line(lwd = 1.5, colour = "#E93434") +
+  # scale_y_continuous(limits = c(1.0, 5.5), breaks = seq(1.0, 10.0, 1.1), 
+                     # name = "Average Count") +
+  labs(title = "Number Review per Month", x = "Month") +
+  theme(title = element_text(family = "Lucida Sans Unicode", size = 12, face = "bold"),
+        plot.title = element_text(hjust = 0.5),
+        axis.title = element_text(size = 10, vjust = 0.5),
+        axis.line = element_line(colour = "grey70", size = 0.8),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(colour = "grey70", linetype = 1),
+        panel.grid.minor.y = element_blank(),
+        plot.margin = margin(.5, .5, .5, .5, "cm"),
+        plot.background = element_rect(colour = "grey", fill = "#E1E1E1", size = 0.8))
+
+library(gridExtra)
+grid.arrange(avg.plot, count.plot, nrow =2)
+```
+
