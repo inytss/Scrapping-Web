@@ -1,0 +1,3 @@
+"0",""
+"0","ggplot(data = telco, aes(x = InternetService, fill = PaymentMethod)) + "
+"0","  geom_bar( position = 'fill') "

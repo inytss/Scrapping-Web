@@ -1,0 +1,8 @@
+"0","#Exercise"
+"0","ggplot(wiki, aes(x=day, y =views)) +"
+"0","  geom_col(aes(fill = day)) +"
+"0","  facet_grid(language~access) + "
+"0","  theme(strip.background = element_rect(color = ""black"", fill = ""khaki""),"
+"0","        panel.background = element_blank(),"
+"0","        panel.border = element_rect(fill = NA)) +"
+"0","   scale_fill_brewer(palette=""Dark2"")"

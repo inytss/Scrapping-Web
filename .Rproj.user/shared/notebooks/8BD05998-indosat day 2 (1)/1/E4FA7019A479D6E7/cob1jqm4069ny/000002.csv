@@ -1,0 +1,6 @@
+"0",""
+"0","# geom_bar, geom_column fill"
+"0","#geom_point, geom_jitter col"
+"0",""
+"0","ggplot(data = telco, aes(x = InternetService, fill = PaymentMethod)) + "
+"0","  geom_bar( position = 'dodge')"

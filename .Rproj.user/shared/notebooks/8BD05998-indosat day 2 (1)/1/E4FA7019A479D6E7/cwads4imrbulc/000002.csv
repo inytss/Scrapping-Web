@@ -1,0 +1,7 @@
+"0","range(telco$MonthlyCharges)"
+"1","[1]"
+"1","  18.25"
+"1"," 118.75"
+"1","
+"
+"0","hist(telco$MonthlyCharges, breaks = 6)"
