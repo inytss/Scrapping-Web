@@ -1,4 +1,0 @@
-"0","telco.gather <- gather(telco, total_type, total, TotalCharges, MonthlyCharges)"
-"0","ggplot(data = telco.gather, aes(x = PaymentMethod,y = total)) +"
-"0","  geom_col(aes(fill=total_type)) +"
-"0","  scale_y_continuous(labels = comma)"

@@ -1,2 +1,0 @@
-"0","retail[,1:2] <- lapply(retail[,1:2], as.Date)"
-"0","retail[,c(""Customer.ID"", ""Product.Name"")] <- lapply(retail[, c(""Customer.ID"", ""Product.Name"")], as.character)"
