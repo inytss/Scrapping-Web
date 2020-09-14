@@ -1,1 +1,0 @@
-"0","wiki.s$wday <- as.factor(ifelse(wiki.s$day == ""Saturday"" | wiki.s$day == ""Sunday"", ""Weekend"", ""Weekdays""))"

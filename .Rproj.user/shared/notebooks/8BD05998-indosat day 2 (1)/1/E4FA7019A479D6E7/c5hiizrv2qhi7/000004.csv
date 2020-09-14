@@ -1,4 +1,0 @@
-"0",""
-"0","ggplot(data = wiki.s, aes(x = year,y = id)) + "
-"0","  geom_boxplot()+"
-"0","  geom_jitter(aes(col= access, shape = access), alpha =0.5) "

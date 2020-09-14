@@ -1,3 +1,0 @@
-"0","#Scatterplot"
-"0","# x dan y numerik"
-"0","plot(telco$MonthlyCharges, telco$TotalCharges, col = telco$PaymentMethod)"

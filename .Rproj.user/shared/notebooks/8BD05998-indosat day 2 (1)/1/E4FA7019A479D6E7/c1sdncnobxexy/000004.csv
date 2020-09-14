@@ -1,5 +1,0 @@
-"0",""
-"0",""
-"0","ggplot(wiki, aes(x = month, y = views)) + "
-"0","  geom_col(aes(fill = year)) + "
-"0","  scale_y_continuous(labels = comma)"

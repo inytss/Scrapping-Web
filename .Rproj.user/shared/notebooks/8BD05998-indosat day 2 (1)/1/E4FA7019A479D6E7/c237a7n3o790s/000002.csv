@@ -1,3 +1,0 @@
-"0","library(ggplot2)"
-"0","plot1 <- ggplot(data = quakes, aes(x = mag,y = stations))"
-"0","plot1 + geom_point()"
