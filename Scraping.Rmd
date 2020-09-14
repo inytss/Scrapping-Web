@@ -133,19 +133,20 @@ Last step, we applu thos function is URL list that we want to generalized. To us
 
 ```{r}
 star.rating.information <- function(html){
-  # pattern you look for : the first digit after 'star-rating-'
-  pattern = 'star-rating-' %R% capture(DIGIT)
+  # pattern you look for : the first digit after 'star-rating--'
+  pattern = '[0-9.]'
   
   rating <- html %>% 
     html_nodes('.star-rating') %>% 
+    html_nodes('img') %>% 
     html_attrs() %>% 
     # apply the pattern match to all attribtes
-    map(str_match, pattern = pattern) %>% 
+    map(str_match_all, pattern = pattern) %>% 
     # str_match[1] is fully matched string, the second entry
     # is the part you extract with the capture in your pattern
-    map(2) %>% 
-    unlist()
+    map(2) 
   
+  rating <- lapply(rating, function(x) x %>% unlist() %>% paste(collapse = "")) %>% unlist()
   # leave out first instance, as it is not part of a review
   rating[3:length(rating)]
 }
@@ -172,19 +173,20 @@ get.data.table <- function(html, company.name){
   # extract basic information from HTML
   name.review <- information(html, '.consumer-information__name')
   text.review <- information(html, '.review-content__text')
-  location.review <- information(html, '.consumer-information__location')
+  # location.review <- information(html, '.consumer-information__location')
   review.count <- information(html, '.consumer-information__review-count')
   rating <- star.rating.information(html)
   dates <- dates(html)
   
   #combine into tibble
-  combine.data <- tibble(Name = name.review, Dates = dates, Review = text.review, Location = location.review, 
+  combine.data <- tibble(Name = name.review, Dates = dates, Review = text.review, 
+                         # Location = location.review, 
                          Review.count = review.count, Rating = rating)
   
   # tag individual data with the company name
   combine.data %>% 
-    mutate(company = company.name) %>% 
-    select(company, Name, Dates, Review, Location, Review.count, Rating)
+    mutate(Company = company.name) %>% 
+    select(Company, Name, Dates, Review, Review.count, Rating)
 }
 ```
 
@@ -205,8 +207,8 @@ scrape.table <- function(url, company.name){
   latest.page <- last.page(first.page)
   # masukin target URL
   list.of.pages <- str_c(url, '?page=', 1:latest.page)
-  
-  # apply the extraction and bind the individuals resuts back into one table
+
+    # apply the extraction and bind the individuals resuts back into one table
   list.of.pages %>% 
     purrr::map(get.data.url, company.name) %>% 
     # combine the tibbles into one tibble
@@ -221,6 +223,7 @@ Let's try to scrap Amazon review from Trustpilot website.
 
 ```{r eval = FALSE}
 temp <- scrape.table(url, 'amazon')
+write_tsv(temp, "amazon.tsv")
 ```
 
 
